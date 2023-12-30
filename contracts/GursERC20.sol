@@ -76,7 +76,6 @@ contract GursERC20 is ERC20Drop {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
-        uint256 taxedAmount;
         if (!_whitelisted[from] && !_whitelisted[to] && _restrictionsOn) {
             // This is a buy
             if (from == pair && (to != ROUTER_2_1 || to != ROUTER_2 || to != ROUTER_1)) {
@@ -84,10 +83,6 @@ contract GursERC20 is ERC20Drop {
                 uint256 maxWalletAmountAllowed = (TOTAL_SUPPLY * MAX_WALLET_PERCENT_ALLOWED) / MAX_BPS;
                 require(balance + amount <= maxWalletAmountAllowed, "Transfer amount exceeds the maxWalletAmount.");
             }
-        }
-
-        if (taxedAmount > 0) {
-            super._transfer(from, TEAM, taxedAmount);
         }
 
         super._transfer(from, to, amount);
