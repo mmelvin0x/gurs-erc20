@@ -32,6 +32,9 @@ contract GursERC20 is ERC20Drop {
     /// @dev The index of the last claimed token.
     uint256 private _lastClaimedIndex = 1;
 
+    /// @dev Whether or not to restrict max wallet amount
+    bool private _restrictionsOn = true;
+
     /// @dev Map of addressess that have claimed.
     mapping(address => bool) private _hasClaimed;
 
@@ -74,12 +77,11 @@ contract GursERC20 is ERC20Drop {
         require(to != address(0), "ERC20: transfer to the zero address");
 
         uint256 taxedAmount;
-        if (!_whitelisted[from] && !_whitelisted[to]) {
+        if (!_whitelisted[from] && !_whitelisted[to] && _restrictionsOn) {
             // This is a buy
             if (from == pair && (to != ROUTER_2_1 || to != ROUTER_2 || to != ROUTER_1)) {
                 uint256 balance = balanceOf(to);
-                uint256 supply = totalSupply();
-                uint256 maxWalletAmountAllowed = (supply * MAX_WALLET_PERCENT_ALLOWED) / MAX_BPS;
+                uint256 maxWalletAmountAllowed = (TOTAL_SUPPLY * MAX_WALLET_PERCENT_ALLOWED) / MAX_BPS;
                 require(balance + amount <= maxWalletAmountAllowed, "Transfer amount exceeds the maxWalletAmount.");
             }
         }
@@ -91,6 +93,13 @@ contract GursERC20 is ERC20Drop {
         super._transfer(from, to, amount);
     }
 
+    /// @dev Turns off max wallet restriction.
+    function setRestrictions() external onlyOwner {
+        _restrictionsOn = false;
+    }
+
+    /// @dev Sets the pair address.
+    /// @param pair_ The address of the pair.
     function setPair(address pair_) external onlyOwner {
         pair = pair_;
     }
